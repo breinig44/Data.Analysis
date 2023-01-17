@@ -1,0 +1,1475 @@
+---
+title: "Divvy Bikes Membership Ride Analysis 2022"
+author: "Bret Reinig"
+date: "2022-01-17"
+output: 
+  
+  html_document:
+
+    toc: true
+  
+    toc_depth: 2
+  
+    toc_float: true
+  
+    number_sections: true
+---
+
+<style>
+
+body {
+  background-color: #EFEFEF
+}
+
+table, th, td {
+  border: 1px solid black;
+  padding: 5px;
+  background-color: #FFFFFF
+}
+
+p, ul, ol {
+  font-size: 16px;
+}
+
+hr {
+  border-top: 1px solid black;
+}
+
+h1 {
+  font-size: 32px;
+}
+
+h2 {
+  font-size: 28px;
+}
+
+h3 {
+  font-size: 24px;
+}
+
+</style>
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+<hr>
+
+<br>
+
+# Summary
+
+## Scenario
+You are a junior data analyst working in the marketing analyst team at Cyclistic, a bike-share company in Chicago. The director of marketing believes the company’s future success depends on maximizing the number of annual memberships. Therefore, your team wants to understand how casual riders and annual members use Cyclistic bikes differently. From these insights, your team will design a new marketing strategy to convert casual riders into annual members. But first, Cyclistic executives must approve your recommendations, so they must be backed up with compelling data insights and professional data visualizations.
+
+## Characters and teams
+* Cyclistic: A bike-share program that features more than 5,800 bicycles and 600 docking stations. Cyclistic sets itself apart by also offering reclining bikes, hand tricycles, and cargo bikes, making bike-share more inclusive to people with disabilities and riders who can’t use a standard two-wheeled bike. The majority of riders opt for traditional bikes; about 8% of riders use the assistive options. Cyclistic users are more likely to ride for leisure, but about 30% use them to commute to work each day.  
+* Lily Moreno: The director of marketing and your manager. Moreno is responsible for the development of campaigns and initiatives to promote the bike-share program. These may include email, social media, and other channels.  
+* Cyclistic marketing analytics team: A team of data analysts who are responsible for collecting, analyzing, and reporting data that helps guide Cyclistic marketing strategy. You joined this team six months ago and have been busy learning about Cyclistic’s mission and business goals — as well as how you, as a junior data analyst, can help Cyclistic achieve them.  
+* Cyclistic executive team: The notoriously detail-oriented executive team will decide whether to approve the recommended marketing program.
+
+## About the company
+
+This projects scenario, characters, and the clyclistic bike company are fictional. 
+
+For this analysis I will be using Divvy Bikes public data set. 
+
+Divvy is Chicagoland’s bike share system across Chicago and Evanston. Divvy provides residents and visitors with a convenient, fun and affordable transportation option for getting around and exploring Chicago.  
+
+Divvy, like other bike share systems, consists of a fleet of specially-designed, sturdy and durable bikes that are locked into a network of docking stations throughout the region. The bikes can be unlocked from one station and returned to any other station in the system. People use bike share to explore Chicago, commute to work or school, run errands, get to appointments or social engagements, and more.  
+
+Divvy is available for use 24 hours/day, 7 days/week, 365 days/year, and riders have access to all bikes and stations across the system.  
+-<a href = "https://ride.divvybikes.com/about#:~:text=Divvy%20provides%20residents%20and%20visitors,docking%20stations%20throughout%20the%20region." target = "blank">ride.divvybikes.com/about</a>  
+
+<hr>
+
+
+# Ask
+
+##  Business Task
+
+<ol>
+<li>How do annual members and casual riders use Divvy bikes differently?</li>
+<li>Why would casual riders buy Divvy annual memberships?</li> 
+<li>How can Divvy use digital media to influence casual riders to become members?</li>
+</ol>
+
+<hr>
+
+# Prepare
+
+For this project I will be looking into Divvy Bikes user data, since purchased from Cyclistic to find relevant trends comparing membership riders to the casual rider. All data was sourced directly from <a href = "https://divvy-tripdata.s3.amazonaws.com/index.html" target = "blank">divvybikes.com</a> via public licensing. The data from December 2021 to November 2022 was downloaded as a separate CSV file for each month. From there Excel was used to create two new columns for each file, `ride_length` and `day_of_week`. 
+
+*ride_length* is the calculated seconds each ride took and was created via the formula:
+
+    =round((ended_at - started_at)*86400, 0)
+    
+The 86400 represents the number of seconds in a day and is used to output the ride_length in seconds.
+
+*day_of_week* returns the day of the week in number format where Sunday equals day 1 and Saturday equals 7.  
+The formula to produce this was:
+    
+    =weekday(started_at, 1)
+   
+<br>
+
+The monthly data will consist of the following columns:
+
+<table>
+  <tr>
+    <th>Column Name</th>
+    <th>Data Type</th>
+    <th>Description</th>
+  </tr>
+  <tr>
+    <td>ride_id</td>
+    <td>Character</td>
+    <td>Ride Identification number </td>
+  </tr>
+  <tr>
+    <td>rideable_type</td>
+    <td>Character</td>
+    <td>Type of bike </td>
+  </tr>
+    <tr>
+    <td>day_of_week</td>
+    <td>Double</td>
+    <td>The day of the week in numeric form, where 1 is Sunday and Saturday is 7</td>
+  </tr>
+    <tr>
+    <td>started_at</td>
+    <td>Datetime</td>
+    <td>The date and time the ride began at</td>
+  </tr>
+  <tr>
+    <td>ended_at</td>
+    <td>Datetime</td>
+    <td>The date and time the ride ended at</td>
+  </tr>
+  <tr>
+    <td>ride_length</td>
+    <td>Double</td>
+    <td>The length of ride in seconds</td>
+  </tr>
+  <tr>
+    <td>start_station_name</td>
+    <td>Character</td>
+    <td>Start Station Name</td>
+  </tr>
+  <tr>
+    <td>start_station_id</td>
+    <td>Character</td>
+    <td>The alphanumeric name given to identify the start station</td>
+  </tr>
+  <tr>
+    <td>end_station_name</td>
+    <td>Character</td>
+    <td>End station name</td>
+  </tr>
+  <tr>
+    <td>end_station_id</td>
+    <td>Character</td>
+    <td>The alphanumeric name given to identify the start station</td>
+  </tr>
+  <tr>
+    <td>start_lat</td>
+    <td>Double</td>
+    <td>Starting latitude</td>
+  </tr>
+  <tr>
+    <td>start_lng</td>
+    <td>Double</td>
+    <td>Starting longitude</td>
+  </tr>
+  <tr>
+    <td>end_lat</td>
+    <td>Double</td>
+    <td>Ending latitude</td>
+  </tr>
+  <tr>
+    <td>end_lng</td>
+    <td>Double</td>
+    <td>Ending longitude</td>
+  </tr>
+  <tr>
+    <td>member_casual</td>
+    <td>Character</td>
+    <td>The type of rider</td>
+  </tr>
+</table>  
+
+
+<br>
+
+## About the Data set  
+
+The data was downloaded as 12 separate CSV files directly from the divvy bikes website. It is organized by the month, covering from December 2021 through November 2022. There are also 2 separate excel files created by myself to illustrate pricing talking points. 
+
+Divvy Bikes website refers to two different bike models, the electric and classic. However the data revealed a third type of bike, the "docked_bike" that accounted for ~3% of total rides. Since no further information could be found on these bikes their data was omitted from this analysis.  
+
+
+
+## Licensing
+
+License. Bikeshare hereby grants to you a non-exclusive, royalty-free, limited, perpetual license to access, reproduce, analyze, copy, modify, distribute in your product or service and use the Data for any lawful purpose (“License”).
+
+
+
+## Data Credibility and Integrity
+
+Does the data *ROCCC*?
+
+* Reliable: The data is reliable, it's unbiased and has not been modified.  
+* Original: The data is produced from the company app and hardware and is not altered by the user so it is considered original.
+* Comprehensive: What was needed to complete an analysis was present in the data, however more detailed information as to what types of trips the casual riders took would have been complimentary to the analyses, such as single ride or day pass.  
+* Current: The data was collected over the past calendar year so it is current at the time of writing.  
+* Cited: Data is sourced directly from the company site so it is cited and credible.
+
+<hr>
+
+# Process
+
+Before analysis can be completed we need to clean up the data to ensure confidence in the results.  
+
+This includes: importing the data into R, removing blank spaces, checking data types, and removing any unneeded data.  
+
+## R
+
+For this project I will be utilizing the <a href = "https://www.r-project.org/">R Programming Language</a> to Process and Analyze the data. 
+
+
+## Installing and loading libraries
+
+<table>
+  <tr>
+    <th>Package</th>
+    <th>Description</th>
+  </tr>
+  <tr>
+    <td>tidyverse</td>
+    <td>used for data wrangling</td>
+  </tr>
+  <tr>
+    <td>janitor</td>
+    <td>to clean and check metadata</td>
+  </tr>
+  <tr>
+    <td>scales</td>
+    <td>for plot scale manipulation</td>
+  </tr>
+  <tr>
+    <td>lubridate</td>
+    <td>for time and date manipulation</td>
+  </tr>
+  <tr>
+    <td>ggpubr</td>
+    <td>to arrange plots</td>
+  </tr>
+    <tr>
+    <td>leaflet</td>
+    <td>to plot points on a map</td>
+  </tr>
+    <tr>
+    <td>sp</td>
+    <td>for mapping</td>
+  </tr>
+    <tr>
+    <td>sf</td>
+    <td>for mapping</td>
+  </tr>
+</table>
+        
+<br>
+
+Before we begin processing the data we need to first check for any missing packages and install if necessary
+
+```{r installing libraries, echo=TRUE}
+
+packages <- c("tidyverse", "janitor", "scales", "lubridate", "ggpubr", "leaflet", "sp", "sf")
+
+install.packages(setdiff(packages, rownames(installed.packages())))
+
+```
+
+
+
+
+## Loading libraries that will be required to work with the data. 
+
+```{r load libraries}
+
+library(tidyverse)  
+library(janitor)  
+library(scales)  
+library(lubridate)  
+library(ggpubr)  
+library(leaflet)  
+library(sp)  
+library(sf)  
+
+```
+
+<br>
+
+
+## Importing Data
+
+`read_csv` from the `readr` package is used to import each months data 
+
+```{r read_csv }
+dec21 <- read_csv("C:\\Users\\brein\\OneDrive\\Documents\\Coursera\\Datay_Analytics\\captstone_02\\202112-divvy-tripdata_01.csv")
+
+jan22 <- read_csv("C:\\Users\\brein\\OneDrive\\Documents\\Coursera\\Datay_Analytics\\captstone_02\\202201-divvy-tripdata_01.csv")
+
+feb22 <- read_csv("C:\\Users\\brein\\OneDrive\\Documents\\Coursera\\Datay_Analytics\\captstone_02\\202202-divvy-tripdata_01.csv")
+
+mar22 <- read_csv("C:\\Users\\brein\\OneDrive\\Documents\\Coursera\\Datay_Analytics\\captstone_02\\202203-divvy-tripdata_01.csv")
+
+apr22 <- read_csv("C:\\Users\\brein\\OneDrive\\Documents\\Coursera\\Datay_Analytics\\captstone_02\\202204-divvy-tripdata_01.csv")
+
+may22 <- read_csv("C:\\Users\\brein\\OneDrive\\Documents\\Coursera\\Datay_Analytics\\captstone_02\\202205-divvy-tripdata_01.csv")
+
+jun22 <- read_csv("C:\\Users\\brein\\OneDrive\\Documents\\Coursera\\Datay_Analytics\\captstone_02\\202206-divvy-tripdata_01.csv")
+
+jul22 <- read_csv("C:\\Users\\brein\\OneDrive\\Documents\\Coursera\\Datay_Analytics\\captstone_02\\202207-divvy-tripdata_01.csv")
+
+aug22 <- read_csv("C:\\Users\\brein\\OneDrive\\Documents\\Coursera\\Datay_Analytics\\captstone_02\\202208-divvy-tripdata_01.csv")
+
+sep22 <- read_csv("C:\\Users\\brein\\OneDrive\\Documents\\Coursera\\Datay_Analytics\\captstone_02\\202209-divvy-tripdata_01.csv")
+
+oct22 <- read_csv("C:\\Users\\brein\\OneDrive\\Documents\\Coursera\\Datay_Analytics\\captstone_02\\202210-divvy-tripdata_01.csv")
+
+nov22 <- read_csv("C:\\Users\\brein\\OneDrive\\Documents\\Coursera\\Datay_Analytics\\captstone_02\\202211-divvy-tripdata_01.csv")
+
+```
+
+
+## Preview of the Data
+
+### Glimpse
+
+To take a quick look at the data we will use the `glimpse` function
+
+```{r glimpse}
+
+glimpse(dec21)
+glimpse(jan22)
+glimpse(feb22)
+glimpse(mar22)
+glimpse(apr22)
+glimpse(may22)
+glimpse(jun22)
+glimpse(jul22)
+glimpse(aug22)
+glimpse(sep22)
+glimpse(oct22)
+glimpse(nov22)
+
+```
+
+<br>
+
+### Janitor
+
+The data vectors and types appear to be the same. However, we can use R to check Vector names and data types using the `janitor` package, more specifically the `compare_df_cols_same` function to be sure.
+
+When it returns `TRUE` this indicates the data sets share the same column names and those data sets are of the same datatype
+
+```{r janitor}
+
+compare_df_cols_same(dec21, jan22, feb22, mar22, apr22, may22, jun22, jul22, aug22, sep22, oct22, nov22)
+
+```
+
+
+
+## Joining Data Sets
+
+Now that we know the data sets share the same datatypes and vector information we are clear to join them.  
+
+To create a full year of data we'll use the `bind_rows` function from the `dplyr` package of the `tidyverse`
+
+Here I also double checked the summary to make sure there were no obvious outliers such as negative time values or lat/lng values that were obviously out of range.
+
+
+```{r bind_rows}
+
+bike_data_22 <- bind_rows(dec21, jan22, feb22, mar22, apr22, may22, jun22, jul22, aug22, sep22, oct22, nov22)
+
+summary(bike_data_22)
+
+```
+
+<br>
+
+## Trim Blank Spaces 
+
+Trimming out possible trailing and inner blanks spaces in vectors that containing characters using `str_squish`
+
+The next step in our cleaning process your data for analysis using the following Case Study Roadmap as a guide:
+
+
+```{r str_squish}
+
+bike_data_22 <- bike_data_22 %>% 
+  mutate(across(where(is.character), str_squish))
+
+```
+
+
+## Checking for Duplicates
+
+Data set is checked for duplicates in the ride_id column using `get_dupes` from the `janitor` library  as other ride variables can be identical and it still be a different ride.  
+
+```{r eval = FALSE}
+
+bike_data_22 %>% 
+  get_dupes(ride_id)
+
+```
+
+No duplicate combinations found of: ride_id  
+
+
+## Cancelled Column  
+
+Creating a column indicating if the ride was cancelled (rides shorter than 60 seconds and returned to start station) and removing docked bikes as there was limited to no information as to what "docked" bikes consisted of.  
+
+```{r cancelled}
+bike_data_22 <-
+  bike_data_22 %>% 
+  filter(rideable_type != "docked_bike") %>% 
+  mutate(cancellation = case_when(
+    (start_station_name == end_station_name & ride_length <60) ~ "Cancelled",TRUE ~ "Not Cancelled"))
+
+print(head(bike_data_22[c("start_station_name", "end_station_name", "ride_length", "cancellation")]))
+
+```
+
+<br>
+
+## Popular Rides Data Frame
+
+Data frame that omits rides missing start OR end stations and are not considered cancelled. 
+
+This data set will be used for analysis later
+
+```{r popular ride data set}
+
+popular_rides <- bike_data_22 %>%
+filter(cancellation != "Cancelled") %>%
+    select(c(start_station_name, end_station_name, ride_length, member_casual, start_lat, start_lng)) %>%
+    drop_na(start_station_name | end_station_name)
+
+glimpse(popular_rides)
+
+```
+
+<br>
+
+## Time and Date Columns
+
+Creating time and date columns for month, day, and hour by extracting them from the started_at column. 
+
+Excess columns that won't be needed for customer analysis were also dropped. 
+
+```{r adding datetime vectors}
+bike_data_22 <-  
+    select(bike_data_22, c(rideable_type, day_of_week, started_at, ride_length, member_casual, cancellation)) %>%
+    mutate(Month = as.integer(format(bike_data_22$started_at, "%m")),
+         Day = as.integer(format(bike_data_22$started_at, "%d")),
+         Hour = as.integer(format(bike_data_22$started_at, "%H")),
+           member_casual = factor(member_casual, levels = c("casual", "member"),
+                              labels = c("Casual", "Member")))
+
+
+glimpse(bike_data_22)
+```
+
+<br>
+
+## Clean Data Frame
+
+Creating a clean data frame without stolen bikes (bikes held longer than 24 hours according to the Divvy Bike website) or cancelled rides. 
+
+```{r clean data set}
+bike_data_clean <- bike_data_22 %>% 
+  filter(cancellation == "Not Cancelled" & ride_length < 86400)
+
+glimpse(bike_data_clean)
+```
+
+<br>
+
+# Analysis
+
+
+This section will focus the first business task: How do annual members and casual riders use Divvy bikes differently?
+
+
+## Annual Overview
+
+### Total Rides and Time
+
+```{r total rides, echo = FALSE}
+
+# Total Rides by Rider Type
+
+total_rides <- bike_data_clean %>% 
+  group_by(member_casual) %>% 
+  summarise(n = n()) %>% 
+  ggplot(mapping = aes(x = member_casual, y = n,  fill = member_casual))+
+  geom_hline(yintercept = seq(0, 3500000, by = 500000), color = "grey")+
+  geom_col(position = "dodge")+
+  labs(title = "Total Rides",
+       subtitle = "2022",
+       caption = "Source: divvybikes.com",
+       x = "Rider Type",
+       y = "Number of Rides",
+       fill = "Rider Type") +
+  scale_y_continuous(labels = label_comma(),
+                     breaks = seq(0, 3500000, by = 500000)) +
+  theme_classic()+
+  geom_text(aes(label = scales::comma(n)), vjust= 1.5, size = 4) +
+  theme(legend.position = "none") +
+  scale_fill_brewer(palette = "Paired")
+
+```
+
+```{r total time, echo = FALSE}
+
+# Total ride times
+
+total_time <- bike_data_clean %>% 
+  group_by(member_casual) %>% 
+  summarize(time = round(sum(ride_length)/60)) %>% 
+  ggplot(mapping = aes(x = member_casual, y = time, fill = member_casual))+
+  geom_hline(yintercept = seq(0, 45000000, by = 5000000), color = "grey")+
+  geom_col(position = "dodge")+
+  labs(title = "Total Time",
+       subtitle = "2022",
+       caption = "Source: divvybikes.com",
+       x = "Rider Type",
+       y = "Number of Minutes",
+       fill = "Rider Type") +
+  scale_y_continuous(labels = label_comma(),
+                     breaks = seq(0, 45000000, by = 5000000)) +
+  geom_text(aes(label = scales::comma(time)), vjust= 1.5, size = 4)+
+  theme_classic()+
+  theme(legend.position = "none") +
+  scale_fill_brewer(palette = "Paired")
+
+```
+
+```{r average ride lengths, echo = FALSE}
+
+# Average Ride Lengths
+
+avg_ride <- bike_data_clean %>% 
+  group_by(member_casual) %>% 
+  summarize(time = round(sum(ride_length)/60),
+            rides = n()) %>%
+  mutate(average = time / rides) %>% 
+  ggplot(mapping = aes(x = member_casual, y = average, fill = member_casual))+
+  geom_hline(yintercept = seq(0, 20, by = 5), color = "grey")+
+  geom_col(position = "dodge")+
+  labs(title = "Average Ride Length",
+       subtitle = "2022",
+       caption = "Source: divvybikes.com",
+       x = "Rider Type",
+       y = "Minutes",
+       fill = "Rider Type") +
+  scale_y_continuous(labels = label_comma(),
+                     breaks = seq(0, 20, by = 5)) +
+  geom_text(aes(label = scales::comma(average)), vjust= 1.5, size = 4)+
+  theme_classic()+
+  theme(legend.position = "none",
+        axis.text.x = element_text(size = 11),
+        legend.text = element_text(size = 11)) +
+  scale_fill_brewer(palette = "Paired")
+
+```
+
+
+Casual rides accounted for 39% of all rides taken for the year, however they also accounted for the most ride time. 
+
+```{r rides vs time, echo =FALSE}
+
+ggarrange(total_rides, total_time, nrow = 1)
+
+```
+
+<br>
+
+### Average Ride Length
+
+The casual ride length was ~58% longer than that of their member counterparts. 
+
+```{r avg_ride plot, echo = FALSE}
+
+avg_ride
+
+```
+
+<br>
+
+
+```{r annual rideable type, echo=FALSE}
+
+# rideable type annual data
+
+rideable_types <- bike_data_clean %>% 
+  mutate(rideable_type = factor(rideable_type, levels = c("classic_bike", "docked_bike", "electric_bike"),
+                                labels = c("Classic Bike", "Docked Bike", "Electric Bike"))) %>% 
+  ggplot(mapping = aes(x = rideable_type, fill = member_casual))+
+  geom_hline(yintercept = seq(0, 1750000, by = 250000), color = "grey")+
+  geom_bar(position = "dodge")+
+  labs(title = "Total Rides by Rider Type",
+       subtitle = "2022",
+       caption = "Source: divvybikes.com",
+       x = "Rideable Type",
+       y = "Number of Rides",
+       fill = "Rider Type")+
+  scale_y_continuous(labels = label_comma(),
+                     limits = c(0, 1750000),
+                     breaks = seq(0, 1750000, by = 250000))+
+  theme_classic()+
+  theme(axis.text.x = element_text(size = 11),
+        legend.text = element_text(size = 11))+
+  scale_fill_brewer(palette = "Paired")
+```
+
+<br>
+
+### Total Rides By Ride Type
+
+Members have a slight preference for the classic bike, while the casual rider prefers the electric bike. 
+
+```{r echo=FALSE}
+
+bike_data_clean %>% 
+  group_by(member_casual, rideable_type) %>% 
+  tally()
+
+```
+
+
+```{r annual rideable type plot, echo = FALSE}
+
+rideable_types
+
+```
+
+<br>
+
+### Average ride length by Rider and Bike Type. 
+
+Electric type ride lengths are shorter than their classic counterparts across both rider types. 
+
+```{r ride type average, message=FALSE, echo=FALSE}
+
+bike_data_clean %>% 
+  group_by(member_casual, rideable_type) %>% 
+  summarize(time = round(sum(ride_length)/60),
+            rides = n()) %>% 
+  mutate(average_mins = time/rides) %>% 
+  select(member_casual, rideable_type, average_mins)
+
+```
+
+
+```{r total_rides, echo=FALSE, message=FALSE, warning=FALSE}
+
+bike_data_clean %>% 
+  group_by(member_casual, rideable_type) %>% 
+  summarize(time = round(sum(ride_length)/60),
+            rides = n()) %>% 
+  mutate(average = time/rides, 
+         rideable_type = factor(rideable_type, levels = c("classic_bike", "docked_bike", "electric_bike"),
+                                labels = c("Classic Bike", "Docked Bike", "Electric Bike"))) %>% 
+  ggplot(mapping = aes(x = rideable_type, y = average, fill = member_casual))+
+  geom_hline(yintercept = seq(0, 25, by = 5), color = "grey")+
+  geom_col(position = "dodge")+
+  labs(title = "Average Ride Lengths",
+       subtitle = "2022",
+       caption = "Source: divvybikes.com",
+       x = "Rideable Type",
+       y = "Minutes",
+       fill = "Rider Type")+
+  scale_y_continuous(labels = label_comma())+
+  theme_classic()+
+  theme(axis.text.x = element_text(size = 11),
+        legend.text = element_text(size = 11))+
+  scale_fill_brewer(palette = "Paired")
+```
+
+<br>
+
+## Monthly Analysis
+
+### Total Rides
+
+Ridership peaks over the Summer months with the upswing beginning in May and falling off in November.
+
+```{r monthly_data, echo=FALSE, warning=FALSE}
+
+# Total rides by month
+
+bike_data_clean %>% 
+  mutate(Month = factor(Month, levels = c(12,1:11),
+                        labels = c("Dec '21","Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov"))) %>% 
+  ggplot(mapping = aes(x = Month)) +
+  geom_hline(yintercept = seq(0,800000, by = 100000), color = "grey")+
+  geom_bar(fill = "lightblue") +
+  labs(title = "Total Rides by Month",
+       subtitle = "2022",
+       caption = "Source: divvybikes.com",
+       y = "Number of Rides") +
+  theme_classic()+
+  scale_y_continuous(labels = label_comma(), 
+                     
+                     breaks= seq(0,800000, by = 100000))+
+  theme(axis.title.x = element_text(margin = margin(t = 5)),
+        axis.text.x = element_text(size = 11))
+```
+
+<br>
+
+### Ridership by Month
+
+```{r month_member_plot, echo=FALSE, warning=FALSE}
+
+# Rides by rider type per month
+
+bike_data_clean %>% 
+  mutate(Month = factor(Month, levels = c(12,1:11),
+                        labels = c("Dec '21","Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov"))) %>% 
+  ggplot(mapping = aes(x = Month, fill = member_casual))+
+  geom_hline(yintercept = seq(0, 450000, by = 50000 ), color = "grey")+
+  geom_bar(position = "dodge") +
+  labs(
+    title= "Rides by Rider Type",
+    subtitle = 2022,
+    caption = "Source: divvybikes.com",
+    y = "Number of Rides",
+    fill = "Rider Type") +
+  scale_fill_brewer(palette = "Paired") +
+  theme_classic() +
+  theme(axis.title.x = element_text(margin = margin(t = 5)),
+        axis.text.x = element_text(size = 10)) + 
+  scale_y_continuous(labels = label_comma(),
+                     breaks= seq(0,450000, by = 50000)) 
+```
+
+<br>
+
+### Percentage of Riders by Month
+
+48% of annual casual rides occur from June to August. 
+
+```{r monthly_member_pct, echo=FALSE, message=FALSE, warning=FALSE}
+
+# Percentage of riders by month
+
+bike_data_clean %>% 
+  group_by(member_casual, Month) %>% 
+  summarize(n = n()) %>% 
+  mutate(freq = (n/(sum(n))),
+         Month = factor(Month, levels = c(12,1:11),
+                        labels = c("Dec '21","Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov"))) %>% 
+  ggplot(mapping = aes(x = Month, y = freq, fill = member_casual))+
+  geom_hline(yintercept = seq(0, 0.18, by = 0.02), color = "grey")+
+  geom_col(position = "dodge") +
+  labs(
+    title= "Rides by Rider Type",
+    subtitle = 2022,
+    caption = "Source divvybikes.com",
+    y = "Percentage of Rides",
+    fill = "Rider Type") +
+  scale_fill_brewer(palette = "Paired") +
+  theme_classic() +
+  theme(axis.title.x = element_text(margin = margin(t = 5)),
+        axis.text.x = element_text(size = 10)) + 
+  scale_y_continuous(labels = scales::percent_format((accuracy = 1)),
+                     breaks= seq(0,0.2, by = 0.02),
+                     limits = c(0, 0.18))
+```
+
+<br>
+
+## Day Of Week Analysis
+
+### Total Rides
+
+Membership rides peak during mid-week while casual rides peak over the weekend. 
+
+Member and casual ridership appear to be inversely related. This is likely due to members using rides to get to and from work, whereas visitors are likely to vacation over the weekend and ride then. 
+
+```{r rides by day, echo=FALSE}
+
+bike_data_clean %>% 
+  mutate(Month = factor(Month, levels = c(12,1:11),
+                        labels = c("Dec '21","Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov")),
+         day_of_week = factor(day_of_week, levels = c(1:7),
+                              labels = c("Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"))) %>% 
+  ggplot(mapping = aes(x = day_of_week, fill = member_casual)) +
+  geom_hline(yintercept = seq(0,550000, by = 50000), color = "grey") +
+  geom_bar(position = "dodge")+
+  labs(title = "Rides by Day",
+       subtitle = 2022,
+       caption = "Source: divvybikes.com",
+       x = "Day of the Week",
+       y =  "Rides",
+       fill = "Member Casual") +
+  theme_classic() +
+  scale_y_continuous(labels = label_comma(),
+                     breaks= seq(0,600000, by = 50000)) +
+  scale_fill_brewer(palette = "Paired")
+
+
+```
+
+<br>
+
+### Casual Riders
+
+The most popular days for casual riders is weekends June to August, peaking in July.
+
+```{r casual heatmap, echo = FALSE}
+
+# casual rider heatmap
+
+bike_data_clean %>% 
+  filter(member_casual == "Casual") %>% 
+  group_by(Month, day_of_week) %>% 
+  tally() %>% 
+  mutate(Month = factor(Month, levels = c(12,1:11),
+                        labels = c("Dec '21","Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov")),
+         day_of_week = factor(day_of_week, levels = c(1:7),
+                              labels = c("Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"))) %>% 
+  ggplot(mapping = aes(x = day_of_week, y = Month, fill = n))+
+  geom_tile()+
+  labs(title = "Casual Rides by Day of Week and Month",
+       subtitle = 2022,
+       caption = "Source: divvybikes.com",
+       x = "Day of the Week",
+       y =  "Month",
+       fill = "Number of Rides") +
+  theme_classic() +
+  scale_fill_continuous(labels = function(x) format(x, big.mark = ",", scientific = FALSE),
+                        breaks = seq(10000, 90000, by = 20000))
+  
+```
+
+<br>
+
+### Member Riders
+
+Member rides are more dispersed throughout the year but appear to peak Tuesday through Thursday, June to September. 
+
+```{r member heatmap, echo = FALSE}
+
+# member heatmap
+
+bike_data_clean %>% 
+  filter(member_casual == "Member") %>% 
+  group_by(Month, day_of_week) %>% 
+  tally() %>% 
+  mutate(Month = factor(Month, levels = c(12,1:11),
+                        labels = c("Dec '21","Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov")),
+         day_of_week = factor(day_of_week, levels = c(1:7),
+                              labels = c("Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"))) %>% 
+  ggplot(mapping = aes(x = day_of_week, y = Month, fill = n))+
+  geom_tile()+
+  labs(title = "Member Rides by Day of Week and Month",
+       subtitle = 2022,
+       caption = "Source: divvybikes.com",
+       x = "Day of the Week",
+       y =  "Month",
+       fill = "Number of Rides") +
+  theme_classic() +
+  scale_fill_continuous(labels = function(x) format(x, big.mark = ",", scientific = FALSE),
+                        breaks = seq(10000, 70000, by = 20000))
+  
+```
+
+<br>
+
+## Time of Day
+
+### Rides by Hour
+
+Ridership for members spikes in the morning and afternoon typical of work start and end times. Casual ridership gradually builds throughout he day peaking around 17:00.
+
+```{r rides per hour, echo=FALSE, message=FALSE}
+bike_data_clean %>% 
+  filter(cancellation == "Not Cancelled") %>%
+  group_by(member_casual, Hour) %>% 
+  summarise(Rides = n()) %>%
+    ggplot(mapping = aes(x = Hour, y = Rides, fill = member_casual)) +
+  geom_hline(yintercept = seq(0, 350000, by = 25000), color = "grey")+
+    geom_col(position = "dodge") +
+    labs(title = "Rides Started by Hour",
+         subtitle = "2022",
+         caption = "Source: divvybikes.com",
+         y = "Number of Rides",
+         fill = "Rider Type") +
+    scale_fill_brewer(palette = "Paired") +
+    theme_classic()+
+  scale_y_continuous(labels = label_comma(), breaks = seq(0, 350000, by = 50000))+
+  scale_x_continuous(name = "Hour", breaks = c(0:23), labels = c(0:23))
+```
+
+<br>
+
+### Percentage of Riders 
+
+Over half of all casual rides occur between 13:00 and 19:00. 
+
+```{r hourly percentage, echo=FALSE, message=FALSE}
+
+# percentage of rider per hour by rider type
+bike_data_clean %>% 
+  group_by(member_casual, Hour) %>% 
+  summarise(Rides = n()) %>% 
+  summarise(percent = (Rides/sum(Rides)),
+            Hour = Hour) %>%
+  ggplot(mapping = aes(x = Hour, y = percent, fill = member_casual))+
+  geom_hline(yintercept = seq(0,0.11, by = 0.01), color = "grey")+
+
+  geom_col(position = "dodge")+
+  theme_classic() +
+  labs(title = "Percentage of Rides Started by Hour",
+       caption = "Source: divvybikes.com",
+       y = "Percent",
+       fill = "Rider Type") +
+  scale_fill_brewer(palette = "Paired")+
+  scale_y_continuous(labels = scales::percent_format((accuracy = 1)),
+                     breaks= seq(0,0.11, by = 0.01),
+                     limits = c(0, 0.11))+
+  scale_x_continuous(name = "Hour", breaks = c(0:23), labels = c(0:23))
+```
+
+<br>
+
+## Stolen Bike Data
+
+### Stolen Bike Data Set
+
+Bikes missing for longer than 24 hours can result in a $1,200 fee (plus tax) charged to the account holder that took out the bike.
+
+```{r stolen bikes}
+bike_data_stolen <-
+  subset(bike_data_22, ride_length >= 86400)
+```
+
+<br>
+
+### Total Bikes Stolen
+
+Total rides charged with a stolen bike fee. All rides that fit under this category were classic bikes interestingly enough. 
+
+```{r stolen_rides, echo= FALSE}
+
+# Number of stolen bike by rider type
+
+bike_data_stolen %>% 
+  group_by(member_casual) %>% 
+  summarize(n = n()) %>% 
+  ggplot(mapping = aes(x = member_casual, y = n, fill = member_casual))+
+  geom_hline(yintercept = seq(0, 3000, by = 500), 
+             color = "grey")+
+  geom_col(position = "dodge")+
+  theme_classic() +
+  theme(legend.position = "none",
+        axis.text.x = element_text(size = 11)) +
+  labs(title = "Total Stolen Bikes",
+       subtitle = "2022",
+       caption = "Source: divvybikes.com",
+       x = "Rider Type",
+       y = "Number of Bikes")+
+  scale_fill_brewer(palette = "Paired")+
+  geom_text(aes(label = scales::comma(n)), vjust= 1.5, size = 4)+
+  scale_y_continuous(labels = label_comma(),
+                     breaks = seq(0, 3000, by = 500))
+
+```
+
+<br>
+
+### Stolen Bikes by Month
+
+The number of rides charged a stolen bike fee correlated with the number of rides taken. 
+
+```{r stolen plot, echo= FALSE}
+
+# stolen bike fees by month
+
+bike_data_stolen %>% 
+  mutate(Month = factor(Month, levels = c(12,1:11),
+                        labels = c("Dec '21","Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov"))) %>% 
+  ggplot(mapping = aes(x = Month)) +
+  geom_hline(yintercept = seq(0, 650, by = 50), color = "grey")+
+  geom_bar(fill = "lightblue") +
+  labs(title = 'Stolen Bikes by Month',
+       subtitle = "2022",
+       caption = "Source: divvybikes.com",
+       y = "Number of Stolen Rides") +
+  theme_classic()+
+  scale_y_continuous(labels = label_comma(),
+                     breaks = seq(0, 650, by = 50))+
+  theme(axis.title.x = element_text(margin = margin(t = 5)),
+        axis.text.x = element_text(size = 10))
+```
+
+<br>
+
+### Stolen Bikes by Rider Type
+
+Stolen rides by casual riders correlates with the annual rides, where the stolen member rides don't fluctuate. 
+
+```{r stolen plot by rider, echo=FALSE}
+
+# stolen bikes by rider type and month
+
+bike_data_stolen %>% 
+  mutate(Month = factor(Month, levels = c(12,1:11),
+                        labels = c("Dec","Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov"))) %>% 
+  ggplot(mapping = aes(x = Month, fill = member_casual))+
+  geom_hline(yintercept = seq(0, 550, by = 50), color = "grey")+
+  geom_bar(position = "dodge") +
+  labs(
+    title= "Stolen Bikes by Rider Type",
+    subtitle = 2022,
+    caption = "Source: divvybikes.com",
+    y = "Number of Bikes",
+    fill = "Rider Type") +
+  scale_fill_brewer(palette = "Paired") +
+  theme_classic() +
+  theme(axis.title.x = element_text(margin = margin(t = 5)),
+        axis.text.x = element_text(size = 10)) + 
+  scale_y_continuous(labels = label_comma(),
+                     breaks = seq(0,550, by = 50),
+                     limits = c(0, 550))
+```
+
+<br>
+
+## Cancelled Rides
+  
+### Percentage of Rides
+
+Member riders were more likely to cancel their rides than casual riders. 
+  
+```{r rider_cancel_plot, echo=FALSE, message=FALSE}
+
+bike_data_22 %>% 
+  group_by(member_casual, cancellation) %>% 
+  summarize(n = n()) %>% 
+  mutate(freq = n/(sum(n))) %>%  
+  filter(cancellation == "Cancelled") %>% 
+  ggplot(bike_data_22, cancellation %in% ("Cancelled"),mapping = aes(x = member_casual, y = freq, fill = member_casual)) +
+  geom_hline(yintercept = seq(0, 0.015, by = 0.001), color = "grey")+
+  geom_col(position = "dodge") + 
+  theme_classic()+
+  labs(title = "Percentage of Rides Cancelled",
+       subtitle = "2022",
+       caption = "Sourced: divvybikes.com",
+       y = "Frequency of Cancellation",
+       x = "Rider Type",)+
+  scale_fill_brewer(palette = "Paired")+
+  scale_y_continuous(labels = scales::percent_format((accuracy = 0.1)),
+                     breaks = seq(0, 0.015, by = 0.002))+
+  geom_text(aes(label = scales::percent(freq)), vjust= 1.5, size = 4)+
+  theme(legend.position = "none",
+        axis.text.x = element_text(size = 11))
+
+```
+
+<br>
+
+## Trip Data
+
+To more accurately group ride start locations GPS locations I rounded off the starting latitude and longitudes to the 4th decimal place.  
+
+At this decimal place it's accurate within 30 feet and groups together locations that share the same station name but may have a different 5th decimal point. 
+
+```{r rounding lat.lng}
+
+popular_rides$start_lat <- 
+  round(popular_rides$start_lat, digits = 4)
+
+popular_rides$start_lng <- 
+  round(popular_rides$start_lng, digits = 4)
+
+head(popular_rides)
+```
+
+<br>
+
+### Popular Start Locations 
+
+Here we will create a dataframe with the 5 most popular start stations for both casual and member riders. 
+
+```{r start station data set}
+popular_start <- popular_rides %>% 
+  group_by(member_casual, start_station_name) %>% 
+  tally() %>% 
+  arrange(desc(n)) %>% 
+  slice(1:5)
+
+```
+
+<br>
+
+
+#### Casual Rides
+
+The most popular starting locations for casual riders 
+
+```{r popular starting causal stations, message=FALSE, warning=FALSE, echo=FALSE}
+
+# popular start stations for Casual riders
+
+
+popular_start%>% 
+  filter(member_casual == "casual") %>%
+  arrange(-n) %>% 
+  mutate(start_station_name = factor(start_station_name, levels = start_station_name)) %>% 
+  ggplot(mapping = aes(x = start_station_name, y = n)) +
+  geom_hline(yintercept = seq(0,45000, by = 5000), color = "grey")+
+  geom_col(fill = "lightblue")+
+  labs(title = "Top 5 Start Locations for Casual Riders",
+       subtitle = "2022",
+       caption = "Source: divvybikes.com",
+       x = "Station Name",
+       y = "Number of Rides")+
+  theme_classic()+
+  scale_y_continuous(labels = label_comma(),
+                     limits = c(0, 45000),
+                     breaks = seq(0,45000, by = 5000))+
+  scale_x_discrete(labels = function(x) str_wrap(x, width = 16))
+```
+
+<br>
+
+#### Member Rides
+
+The most popular starting locations for members 
+
+```{r popular starting member stations, echo=FALSE}
+
+popular_start %>% 
+  filter(member_casual == "member") %>% 
+  arrange(-n) %>% 
+  mutate(start_station_name = factor(start_station_name, levels = start_station_name)) %>% 
+  ggplot(mapping = aes(x = start_station_name, y = n))+
+  geom_hline(yintercept = seq(0,25000, by = 5000), color = "grey")+
+  geom_col(fill = "lightblue")+
+  labs(title = "Top 5 Start Locations for Member Riders",
+       subtitle = "2022",
+       caption = "Source: divvybikes.com",
+       x = "Station Name",
+       y = "Number of Rides")+
+  theme_classic()+
+  scale_y_continuous(labels = label_comma(),
+                     limits = c(0, 25000),
+                     breaks = seq(0,25000, by = 5000))+
+  scale_x_discrete(labels = function(x) str_wrap(x, width = 16))
+
+```
+
+<br>
+
+## Mapping Popular Start Stations
+
+```{r casual start}
+
+popular_casual <- popular_rides %>% 
+  filter(member_casual == "casual") %>% 
+  group_by(member_casual, start_station_name, start_lat, start_lng) %>% 
+  tally() %>% 
+  arrange(desc(n)) %>% 
+  group_by(member_casual) %>% 
+  slice(1:5)
+
+```
+
+
+```{r member start}
+
+popular_member <- popular_rides %>% 
+  filter(member_casual == "member") %>% 
+  group_by(member_casual, start_station_name, start_lat, start_lng) %>% 
+  tally() %>% 
+  arrange(desc(n)) %>% 
+  group_by(member_casual) %>% 
+  slice(1:5)
+
+```
+
+<br>  
+
+### Casual Rides
+
+```{r casual map}
+
+#casual matrix
+lon <- popular_casual$start_lng
+lat <- popular_casual$start_lat
+df <- as.data.frame(cbind(lon, lat))
+
+#state which columns are lon and lat
+coordinates(df) <- ~lon+lat
+
+#convert to sf object
+df <- st_as_sf(df)
+
+#set crs 
+st_crs(df) <- 4326
+
+#create leaflet
+leaflet(df) %>% addMarkers() %>% addTiles()
+
+```
+
+<br>  
+
+### Member Rides
+
+```{r member map}
+
+# member matrix
+lon <- popular_member$start_lng
+lat <- popular_member$start_lat
+df <- as.data.frame(cbind(lon, lat))
+
+#state which columns are lon and lat
+coordinates(df) <- ~lon+lat
+
+#convert to sf object
+df <- st_as_sf(df)
+
+#set crs 
+st_crs(df) <- 4326
+
+#create leaflet
+leaflet(df) %>% addMarkers() %>% addTiles()
+
+```
+
+<br>
+
+### Top 5 Trips by Rider Type
+
+For the casual riders, 4 of the 5 most popular rides ended at the start station. All 5 of the start stations are the same as the popular start stations from the previous section.  
+
+The member riders however, shared no start station locations from the previous section. They also did not return to the start station. 
+
+```{r popular start stations, echo=FALSE}
+trips <- popular_rides %>% 
+  group_by(member_casual, start_station_name, end_station_name) %>% 
+  tally() %>% 
+  arrange(desc(n)) %>% 
+  group_by(member_casual) %>% 
+  slice(1:5)
+
+print(trips)
+```
+
+<br>
+
+## Rides Returned to Start Station
+
+Mutating table to include a column to indicate if bike was returned to the start station  and dropping those missing station names
+
+```{r return status table}
+
+# return status column
+
+return_status <-
+  popular_rides %>% 
+  mutate(status = case_when(
+    start_station_name == end_station_name ~ "Returned",
+    start_station_name != end_station_name ~ "Not Returned"))
+
+
+print(head(return_status[c("start_station_name", "end_station_name", "status")]))
+
+```
+
+<br>
+
+### Percentage of Returned Bikes to Start Station
+
+Casual riders unsurprisingly returned to their starting station at a much higher frequency than member riders, implying that their rides were driven more by sight seeing than a destination. This may also help to offer an explanation as to why their average ride times were longer on average as well. 
+
+```{r plot returned percentage, message=FALSE, echo=FALSE}
+
+return_status %>% 
+  group_by(member_casual, status) %>% 
+  summarise(n = n()) %>% 
+  mutate(frequency_returned = n/sum(n),
+         member_casual = factor(member_casual, levels = c("casual", "member"),
+                              labels = c("Casual", "Member"))) %>%
+  filter(status == "Returned") %>% 
+  ggplot(mapping = aes(x = member_casual, y = frequency_returned, fill = member_casual)) +
+  geom_hline(yintercept = seq(0, 0.08, by = 0.01), color = "grey")+
+  geom_col(position = "dodge") + 
+  scale_y_continuous(labels = scales::percent_format(accuracy = 1),
+                     breaks= seq(0, 0.08, by = 0.01))+
+  theme_classic()+
+  scale_fill_brewer(palette = "Paired")+
+  labs(title = "Bikes Returned to Start Station",
+       subtitle = "2022",
+       caption = "Source: divvybikes.com",
+       y = "Frequency",
+       x = "Rider Type")+
+  guides(fill = guide_legend(title = "Status"))+
+  geom_text(aes(label = scales::percent(frequency_returned)), vjust= 1.5, size = 4)+
+  theme(axis.text.x = element_text(size = 11,),
+        legend.position = "none")
+
+```
+
+
+## Price Breakdown 
+
+Divvy Bikes offer annual memberships for /$120 a year. Included with this membership are unlimited classic bike rentals under 45 minutes and all bike unlock fees. Electric bike rentals are also offered at a reduced ride price per minute compared to casual riders.  
+
+```{r load price data}
+
+electric <- read_csv("C:\\Users\\brein\\OneDrive\\Documents\\Coursera\\Datay_Analytics\\captstone_02\\divvy_calc_electric.csv")
+
+
+classic <- read_csv("C:\\Users\\brein\\OneDrive\\Documents\\Coursera\\Datay_Analytics\\captstone_02\\divvy_calc_classic.csv")
+
+```
+
+### Electric Bike
+
+The average ride length for a casual rider on an electric bike is ~ 16 minutes. The casual rider pays \$1 to unlock a bike and \$0.39 a minute per minute, while the member rider unlocks bikes for free and pays only \$0.16 per minute.  
+
+After 26 rides, just over 2 rides per month members will start to save. 
+
+```{r plot electric price, warning=FALSE, echo = FALSE, message=FALSE}
+electric_bikes <- electric %>% 
+  mutate(member_type = factor(member_type, levels = c("casual", "member"),
+                        labels = c("Casual", "Member"))) %>%
+  ggplot(mapping = aes(x = rides, y = price, fill = member_type, color = member_type))+
+  geom_vline(xintercept = seq(0,60, by = 5), 
+             color = "grey") +
+  geom_hline(yintercept = seq(0,450, by = 50), 
+             color = "grey") +
+  geom_line(linewidth = 1.5) +
+  theme_classic()+
+  annotate("label", x = 42, y = 130, label = "At 26 rides you begin to save money 
+           with the membership", size = 3.5) +
+  annotate("segment", x = 25.5, 
+           xend = 25.5, y = 190, 
+           yend = 120, 
+           size = 1.2 ) +
+  scale_y_continuous(limits = c(0,450), 
+                     labels = seq(0,450, by = 50), 
+                     breaks = seq(0,450, by = 50)) +
+  scale_x_continuous(limits = c(0,60), 
+                     labels = seq(0,60, by = 5), 
+                     breaks = seq(0,60, by = 5)) +
+  scale_color_brewer(palette = "Paired")+
+  labs(title = "Price Model for Electric Bikes",
+       subtitle = "2022",
+       caption = "Source: divvybikes.com",
+       x = "Number of Rides",
+       y = "Expense in USD")+
+  guides(color = guide_legend(title = "Rider Type"))
+```
+
+```{r electric.bikes.graph, echo=FALSE, warning=FALSE, message=FALSE}
+electric_bikes
+```
+
+
+
+### Classic Bike
+
+The average classic ride for casual and member riders is 24 minutes and 13 minutes respectively. For members each Classic ride less than 45 minutes is completely included with the cost of membership. So if a member was to only ride classic bikes for the year, they're price would likely be fixed at the \$120 membership fee. 
+
+```{r plot classic price, warning=FALSE, echo=FALSE}
+classic_bikes <- classic %>% 
+  mutate(member_type = factor(member_type, levels = c("casual", "member"),
+                        labels = c("Casual", "Member"))) %>%
+  ggplot(mapping = aes(x = rides, y = price, color = member_type))+
+  geom_line(linewidth = 1.5)+
+  geom_vline(xintercept = seq(0,60, by = 5), color = "grey")+
+  geom_hline(yintercept = seq(0,300, by = 50), 
+             color = "grey") +
+  theme_classic()+
+  annotate("label", x = 42, y = 80, label = "At 24 rides you begin to save money 
+  with the membership", size = 3.5)+
+  annotate("segment", x = 24, xend = 24, y = 60, yend = 120, size = 1.2 )+
+  scale_x_continuous(limits = c(0,60), labels = seq(0,60, by = 5), breaks = seq(0,60, by = 5))+
+  scale_color_brewer(palette = "Paired")+
+  labs(title = "Price Model for Classic Bikes",
+       subtitle = "2022",
+       caption = "Source: divvybikes.com",
+       x = "Number of Rides",
+       y = "Price in USD")+
+  guides(color = guide_legend(title = "Rider Type"))
+```
+
+
+```{r classic, echo=FALSE, warning=FALSE, message=FALSE}
+classic_bikes
+```
+
+
+<br>
+
+<hr>
+
+## Findings
+
+<ul>
+  <li>Members accounted for the most rides taken on the year, however casual riders accrued the most time by averaging a longer ride length</li>  
+
+  <li>Both rider types peaked over the Summer months, however casual riders showed the most significant influx of riders with 48% of all casual rides for the year occuring between June and August. </li>  
+
+  <li>Casual rides were taken at the highest rates during the weekends, while member rides peaked Tuesday to Thursday.</li>  
+ 
+  <li>Member rides peaked in the morning (07:00 - 08:00) and the late afternoon (16:00 - 18:00) typical of start and end times for work beginning and ending. Meanwhile the casual rides begin to increase starting around noon, peaking at 17:00, and falls off after 19:00.</li>  
+
+  <li>Casual riders were charged for stolen bikes almost 4x as much as members. The number of casual stolen rides appears to correlate with that of the overall ridership.</li>  
+ 
+  <li>Surprisingly members were more likely on average to cancel their rides than casual riders.</li>  
+ 
+  <li>Most casual rides began near the waterfront, in particular near attractions such as the Navy Pier and Millennium Park. They also returned to the start station at a higher rate than members.</li>
+ 
+  <li>Three out of five of the most popular member rides started within the city, with the other 2 beginning much further south on the University of Chicago campus.</li>  
+  
+</ul>
+
+<br>
+
+<hr>
+
+# Act
+
+## Recommendations
+
+
+<ol>
+
+  <li>Customers are usually drawn to memberships by the idea of saving money. If they are local casual riders, apprising them of the price models where after just 2 rides a month they'll begin to save money could effectively persuade them to become members.</li>  
+  
+  <li>One of the larger isolated pools of riders begins at the University of Chicago campus. Targeting students not yet part of the membership program via digital media could be a good source of potential members as they are likely to be reoccurring riders.</li>  
+  
+  <li>The most popular trips for casual riders begin and end at the same station, most often at waterfront attractions. It may be conducive to increase the number of stations or bikes available per station in these areas. </li>  
+  
+</ol>
+
+
+## Future Notes
+
+* Unfortunately without user information it makes it difficult to measure how many users are local to Chicago versus those that travel, and therefore would be more likely to be persuaded into purchasing a membership.   
+* Being able to identify the type of ride pass would also allow for a more insightful analysis, as the raw data only indicates rider type.   
+* More specific station data could also help with further analysis, for example the average time and number of docking stations available.   
